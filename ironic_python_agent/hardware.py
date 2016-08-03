@@ -242,6 +242,16 @@ class Memory(encoding.SerializableComparable):
         self.physical_mb = physical_mb
 
 
+class CPUInfo(encoding.SerializableComparable):
+    serializable_fields = ('version', 'cpu_count', 'core_count', 'thread_count')
+
+    def __init__(self, version, cpu_count, core_count, thread_count):
+        self.version = version
+        self.cpu_count = cpu_count
+        self.core_count = core_count
+        self.thread_count = thread_count
+
+
 class SystemVendorInfo(encoding.SerializableComparable):
     serializable_fields = ('product_name', 'serial_number', 'manufacturer')
 
@@ -275,6 +285,9 @@ class HardwareManager(object):
         raise errors.IncompatibleHardwareMethodError
 
     def get_memory(self):
+        raise errors.IncompatibleHardwareMethodError
+
+    def get_cpu_info(self):
         raise errors.IncompatibleHardwareMethodError
 
     def get_os_install_device(self):
@@ -348,6 +361,7 @@ class HardwareManager(object):
         hardware_info['bmc_address'] = self.get_bmc_address()
         hardware_info['system_vendor'] = self.get_system_vendor_info()
         hardware_info['boot'] = self.get_boot_info()
+        hardware_info['cpu_info'] = self.get_cpu_info()
         return hardware_info
 
     def get_clean_steps(self, node, ports):
@@ -612,6 +626,60 @@ class GenericHardwareManager(HardwareManager):
                             'returned %s', out)
 
         return Memory(total=total, physical_mb=physical)
+
+    def get_cpu_info(self):
+        try:
+            out, _e = utils.execute("dmidecode --type processor | grep 'Processor Information'",
+                                   shell=True)
+        except (processutils.ProcessExecutionError, OSError) as e:
+            LOG.warning("Cannot get cpu count info: %s", e)
+            cpu_count = 0
+        else:
+            cpu_count = len(out.strip().split('\n'))
+
+        version = ''
+        out = utils.try_execute("dmidecode --type processor | grep Version", shell=True)
+        if out:
+            try:
+                for line in out.strip().split('\n'):
+                    line = line.strip()
+                    version = line.split('Version: ', 1)[1]
+                    if not version:
+                        LOG.debug('One cpu version is empty')
+                    else:
+                        break
+
+            except (IndexError, ValueError):
+                LOG.warning('Malformed CPU version information %s', out)
+        else:
+             LOG.warning('Failed to get CPU version')
+
+        core_count = 0
+        thread_count = 0
+        out = utils.try_execute("dmidecode --type processor | gre 'Count'", shell=True)
+        if out:
+            try:
+                for line in out.strip().split('\n'):
+                    line = line.strip()
+                    if core_count and thread_count:
+                        break
+
+                    if 'Core Count' in line:
+                        value = line.split('Core Count: ', 1)[1]
+                        core_count = int(UINT_CONVERTER(value).to_base_units())
+
+                    if 'Thread Count' in line:
+                        value = line.split('Thread Count: ', 1)[1]
+                        thread_count = int(UINT_CONVERTER(value).to_base_units())
+
+            except (IndexError, ValueError):
+                LOG.warning("Malformed CPU core count and thread count information: %s", out)
+        else:
+            LOG.warning('Failed to get CPU core count and thread count')
+
+        return CPUInfo(version=version, cpu_count=cpu_count,
+                      core_count=core_count, thread_count=thread_count)
+
 
     def list_block_devices(self):
         return list_all_block_devices()
