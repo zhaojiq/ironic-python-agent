@@ -638,7 +638,7 @@ class GenericHardwareManager(HardwareManager):
             cpu_count = len(out.strip().split('\n'))
 
         version = ''
-        out = utils.try_execute("dmidecode --type processor | grep Version", shell=True)
+        out, _e = utils.try_execute("dmidecode --type processor | grep Version", shell=True)
         if out:
             try:
                 for line in out.strip().split('\n'):
@@ -656,7 +656,7 @@ class GenericHardwareManager(HardwareManager):
 
         core_count = 0
         thread_count = 0
-        out = utils.try_execute("dmidecode --type processor | gre 'Count'", shell=True)
+        out, _e = utils.try_execute("dmidecode --type processor | gre 'Count'", shell=True)
         if out:
             try:
                 for line in out.strip().split('\n'):
@@ -666,11 +666,11 @@ class GenericHardwareManager(HardwareManager):
 
                     if 'Core Count' in line:
                         value = line.split('Core Count: ', 1)[1]
-                        core_count = int(UINT_CONVERTER(value).to_base_units())
+                        core_count = int(value)
 
                     if 'Thread Count' in line:
                         value = line.split('Thread Count: ', 1)[1]
-                        thread_count = int(UINT_CONVERTER(value).to_base_units())
+                        thread_count = int(value)
 
             except (IndexError, ValueError):
                 LOG.warning("Malformed CPU core count and thread count information: %s", out)
