@@ -656,7 +656,7 @@ class GenericHardwareManager(HardwareManager):
 
         core_count = 0
         thread_count = 0
-        out, _e = utils.try_execute("dmidecode --type processor | gre 'Count'", shell=True)
+        out, _e = utils.try_execute("dmidecode --type processor | grep 'Count'", shell=True)
         if out:
             try:
                 for line in out.strip().split('\n'):
