@@ -630,7 +630,7 @@ class GenericHardwareManager(HardwareManager):
     def get_cpu_info(self):
         try:
             out, _e = utils.execute("dmidecode --type processor | grep 'Processor Information'",
-                                   shell=True)
+                                    shell=True)
         except (processutils.ProcessExecutionError, OSError) as e:
             LOG.warning("Cannot get cpu count info: %s", e)
             cpu_count = 0
@@ -650,9 +650,9 @@ class GenericHardwareManager(HardwareManager):
                         break
 
             except (IndexError, ValueError):
-                LOG.warning('Malformed CPU version information %s', out)
+                LOG.warning('Malformed CPU version information: %s', out)
         else:
-             LOG.warning('Failed to get CPU version')
+            LOG.warning('Failed to get CPU version')
 
         core_count = 0
         thread_count = 0
@@ -673,12 +673,12 @@ class GenericHardwareManager(HardwareManager):
                         thread_count = int(value)
 
             except (IndexError, ValueError):
-                LOG.warning("Malformed CPU core count and thread count information: %s", out)
+                LOG.warning('Malformed CPU core count and thread count information: %s', out)
         else:
             LOG.warning('Failed to get CPU core count and thread count')
 
         return CPUInfo(version=version, cpu_count=cpu_count,
-                      core_count=core_count, thread_count=thread_count)
+                       core_count=core_count, thread_count=thread_count)
 
 
     def list_block_devices(self):
