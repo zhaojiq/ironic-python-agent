@@ -253,12 +253,13 @@ class CPUInfo(encoding.SerializableComparable):
 
 
 class SystemVendorInfo(encoding.SerializableComparable):
-    serializable_fields = ('product_name', 'serial_number', 'manufacturer')
+    serializable_fields = ('product_name', 'serial_number', 'manufacturer', 'asset_tag')
 
     def __init__(self, product_name, serial_number, manufacturer):
         self.product_name = product_name
         self.serial_number = serial_number
         self.manufacturer = manufacturer
+        self.asset_tag = asset_tag
 
 
 class BootInfo(encoding.SerializableComparable):
@@ -774,9 +775,20 @@ class GenericHardwareManager(HardwareManager):
                     serial_number = line_arr[1].strip()
                 elif line_arr[0].strip() == 'Manufacturer':
                     manufacturer = line_arr[1].strip()
+                    
+        try:
+            out, _e = utils.execute("dmidecode -s chassis-asset-tag",
+                                    shell=True)
+        except (processutils.ProcessExecutionError, OSError) as e:
+            LOG.warning("Cannot get system vendor asset tag: %s", e)
+        else:
+            out_list = out_strip().split('\n')
+            asset_tag = out_list[len(out_list)-1]
+            
         return SystemVendorInfo(product_name=product_name,
                                 serial_number=serial_number,
-                                manufacturer=manufacturer)
+                                manufacturer=manufacturer,
+                                asset_tag=asset_tag)
 
     def get_boot_info(self):
         boot_mode = 'uefi' if os.path.isdir('/sys/firmware/efi') else 'bios'
