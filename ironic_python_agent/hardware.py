@@ -255,7 +255,7 @@ class CPUInfo(encoding.SerializableComparable):
 class SystemVendorInfo(encoding.SerializableComparable):
     serializable_fields = ('product_name', 'serial_number', 'manufacturer', 'asset_tag')
 
-    def __init__(self, product_name, serial_number, manufacturer):
+    def __init__(self, product_name, serial_number, manufacturer, asset_tag):
         self.product_name = product_name
         self.serial_number = serial_number
         self.manufacturer = manufacturer
