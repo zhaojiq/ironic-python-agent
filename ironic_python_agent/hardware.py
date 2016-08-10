@@ -782,7 +782,7 @@ class GenericHardwareManager(HardwareManager):
         except (processutils.ProcessExecutionError, OSError) as e:
             LOG.warning("Cannot get system vendor asset tag: %s", e)
         else:
-            out_list = out_strip().split('\n')
+            out_list = out.strip().split('\n')
             asset_tag = out_list[len(out_list)-1]
             
         return SystemVendorInfo(product_name=product_name,
