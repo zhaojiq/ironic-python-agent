@@ -966,20 +966,20 @@ class GenericHardwareManager(HardwareManager):
         utils.try_execute('modprobe', 'ipmi_devintf')
         utils.try_execute('modprobe', 'ipmi_si')
 
-        try:
-            out, _e = utils.execute(
-                "ipmitool lan print | grep -e 'IP Address [^S]' "
-                "| awk '{ print $4 }'", shell=True)
-            if out.strip() == '0.0.0.0':
-                out, _e = utils.execute(
-                    "ipmitool lan print 8 | grep -e 'IP Address [^S]' "
-                    "| awk '{ print $4 }'", shell=True)
-        except (processutils.ProcessExecutionError, OSError) as e:
-            # Not error, because it's normal in virtual environment
-            LOG.warning("Cannot get BMC address: %s", e)
-            return
-
-        return out.strip()
+		for channel_id in range(1,10):
+			try:
+				out, _e = utils.execute(
+					"ipmitool lan print " + channel_id + 
+					"| grep -e 'IP Address [^S]' "
+					"| awk '{ print $4 }'", shell=True)
+				if out.strip() == '0.0.0.0':
+					continue
+				else:
+					return out.strip()				
+			except (processutils.ProcessExecutionError, OSError) as e:
+				# Not error, because it's normal in virtual environment
+				LOG.warning("Cannot get BMC address: %s, channel_id: %d" % (e, channel_id))
+				continue
 
 
 def _compare_extensions(ext1, ext2):
