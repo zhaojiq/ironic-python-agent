@@ -981,7 +981,7 @@ class GenericHardwareManager(HardwareManager):
         for channel_id in range(1,10):
             try:
                 out, _e = utils.execute(
-                    "ipmitool lan print " + channel_id + 
+                    "ipmitool lan print " + str(channel_id) + 
                     "| grep -e 'IP Address [^S]' "
                     "| awk '{ print $4 }'", shell=True)
                 if out.strip() != '0.0.0.0':
