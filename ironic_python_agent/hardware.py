@@ -960,26 +960,38 @@ class GenericHardwareManager(HardwareManager):
 
         return True
 
+        
     def get_bmc_address(self):
         # These modules are rarely loaded automatically
         utils.try_execute('modprobe', 'ipmi_msghandler')
         utils.try_execute('modprobe', 'ipmi_devintf')
         utils.try_execute('modprobe', 'ipmi_si')
-
-		for channel_id in range(1,10):
-			try:
-				out, _e = utils.execute(
-					"ipmitool lan print " + channel_id + 
-					"| grep -e 'IP Address [^S]' "
-					"| awk '{ print $4 }'", shell=True)
-				if out.strip() == '0.0.0.0':
-					continue
-				else:
-					return out.strip()				
-			except (processutils.ProcessExecutionError, OSError) as e:
-				# Not error, because it's normal in virtual environment
-				LOG.warning("Cannot get BMC address: %s, channel_id: %d" % (e, channel_id))
-				continue
+           
+        try:
+            out, _e = utils.execute(
+                "ipmitool lan print | grep -e 'IP Address [^S]' "
+                "| awk '{ print $4 }'", shell=True)
+            if out.strip() != '0.0.0.0':
+                return out.strip()
+                
+        except (processutils.ProcessExecutionError, OSError) as e:
+            # Not error, because it's normal in virtual environment
+            LOG.warning("Cannot get BMC address: %s", e)
+                
+        for channel_id in range(1,10):
+            try:
+                out, _e = utils.execute(
+                    "ipmitool lan print " + channel_id + 
+                    "| grep -e 'IP Address [^S]' "
+                    "| awk '{ print $4 }'", shell=True)
+                if out.strip() != '0.0.0.0':
+                    return out.strip()
+                    
+            except (processutils.ProcessExecutionError, OSError) as e:
+                # Not error, because it's normal in virtual environment
+                LOG.warning("Cannot get BMC address: %s, channel_id: %d" % (e, channel_id))
+                
+        return None
 
 
 def _compare_extensions(ext1, ext2):
