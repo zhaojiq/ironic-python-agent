@@ -971,7 +971,7 @@ class GenericHardwareManager(HardwareManager):
             out, _e = utils.execute(
                 "ipmitool lan print | grep -e 'IP Address [^S]' "
                 "| awk '{ print $4 }'", shell=True)
-            if out.strip() != '0.0.0.0':
+            if out.strip() and out.strip() != '0.0.0.0':
                 return out.strip()
                 
         except (processutils.ProcessExecutionError, OSError) as e:
@@ -984,7 +984,7 @@ class GenericHardwareManager(HardwareManager):
                     "ipmitool lan print " + str(channel_id) + 
                     "| grep -e 'IP Address [^S]' "
                     "| awk '{ print $4 }'", shell=True)
-                if out.strip() != '0.0.0.0':
+                if out.strip() and out.strip() != '0.0.0.0':
                     return out.strip()
                     
             except (processutils.ProcessExecutionError, OSError) as e:
